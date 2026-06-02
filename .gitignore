@@ -1,0 +1,7 @@
+.claude/
+impl.txt
+
+*.o
+.cache/
+.vscode/
+main
