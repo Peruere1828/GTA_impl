@@ -19,25 +19,27 @@
 #include <functional>
 using namespace std;
 
-// 判断删除边 (u,v) 后图是否连通 (用 DFS 检查)
-bool isBridge(int u, int v, const vector<vector<int>>& adj,
-              const vector<vector<int>>& mat) {
-    // 若 u 除了 v 外没有其他邻居, 则是割边
+// 判断删除边 (u,v) 后图是否仍连通 (用 DFS 检查)
+// 注意: Fleury 算法每步选边时调用, 此时 (u,v) 尚未删除
+bool isBridge(int u, int v, const vector<vector<int>>& mat) {
+    int n = mat.size();
+
+    // 快判: 若 u 除了 v 外没有其他邻居, 则 (u,v) 必为割边
     int cnt = 0;
-    for (int w = 0; w < (int)adj.size(); w++)
+    for (int w = 0; w < n; w++)
         if (w != v && mat[u][w] > 0) cnt++;
     if (cnt == 0) return true;
 
-    // 从 u 出发做 DFS, 不走边 (u,v)
-    int n = adj.size();
+    // 从 u 出发做 DFS, 不允许经过边 (u,v)
+    // 若 v 不可达, 则 (u,v) 是割边
     vector<int> vis(n, 0);
     vis[u] = 1;
     vector<int> stk = {u};
     while (!stk.empty()) {
         int x = stk.back(); stk.pop_back();
         for (int y = 0; y < n; y++) {
-            if (!vis[y] && mat[x][y] > 0 &&
-                !(x == u && y == v) && !(x == v && y == u)) {
+            if (mat[x][y] > 0 && !vis[y] &&
+                !((x == u && y == v) || (x == v && y == u))) {
                 vis[y] = 1;
                 stk.push_back(y);
             }
@@ -69,7 +71,7 @@ vector<int> fleury(int n, vector<pair<int,int>> edges) {
         for (int v = 0; v < n; v++) {
             if (mat[u][v] > 0) {
                 if (next == -1) next = v;
-                if (!isBridge(u, v, vector<vector<int>>(), mat)) {
+                if (!isBridge(u, v, mat)) {
                     next = v; break;
                 }
             }
