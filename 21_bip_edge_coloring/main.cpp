@@ -62,7 +62,8 @@ vector<int> bipartiteEdgeColoringDelta(int nL, int nR, const vector<pair<int,int
         // 路径: v --(b)--> w1 --(a)--> w2 --(b)--> ...
         int curV = v;
         int curColor = a;
-        while (true) {
+        int maxSteps = nL + nR; // 防止无限循环
+        while (maxSteps-- > 0) {
             int nextU = colorAtR[curV][curColor];
             if (nextU == -1) break;
             int nextV = colorAtL[nextU][(curColor == a) ? b : a];

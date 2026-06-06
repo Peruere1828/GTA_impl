@@ -26,7 +26,7 @@ using namespace std;
 
 // 使用 multiset 或邻接矩阵管理边
 // 这里用邻接矩阵记录剩余边数(支持多重边)
-vector<int> hierholzer(int n, vector<pair<int,int>> edges) {
+vector<int> hierholzer(int n, const vector<pair<int,int>>& edges) {
     // 构建邻接矩阵(允许重边)
     vector<vector<int>> mat(n, vector<int>(n, 0));
     vector<int> deg(n, 0);

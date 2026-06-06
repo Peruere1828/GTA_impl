@@ -48,7 +48,7 @@ bool isBridge(int u, int v, const vector<vector<int>>& mat) {
     return !vis[v]; // 若 v 不可达, 则是割边
 }
 
-vector<int> fleury(int n, vector<pair<int,int>> edges) {
+vector<int> fleury(int n, const vector<pair<int,int>>& edges) {
     vector<vector<int>> mat(n, vector<int>(n, 0));
     vector<int> deg(n, 0);
     for (auto& e : edges) {

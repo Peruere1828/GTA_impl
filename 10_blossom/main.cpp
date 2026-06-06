@@ -75,6 +75,9 @@ vector<int> blossomMatching(int n, const vector<pair<int,int>>& edges) {
 
                 if (type[v] == -1) {
                     // v 未访问
+                    type[v] = 1;  // Odd — 必须在检查 match[v] 之前设置
+                    parent[v] = u; // 必须在回溯前设置 parent
+
                     if (match[v] == -1) {
                         // 找到增广路!
                         // 回溯并翻转
@@ -95,9 +98,7 @@ vector<int> blossomMatching(int n, const vector<pair<int,int>>& edges) {
                         return true;
                     }
                     // v 已匹配, 将其匹配点标记为 Even
-                    type[v] = 1; // Odd
                     type[match[v]] = 0; // Even
-                    parent[v] = u;
                     parent[match[v]] = v;
                     q.push(match[v]);
                 } else if (type[v] == 0) {

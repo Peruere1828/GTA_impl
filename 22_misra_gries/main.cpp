@@ -79,7 +79,8 @@ vector<int> misraGries(int n, const vector<pair<int,int>>& edges) {
             // 构建从 v 出发的 a-b 交替路径, 翻转颜色
             int cur = v;
             int curColor = a; // 从 v 开始, 要翻转成 a
-            while (true) {
+            int maxSteps = n; // 防止无限循环
+            while (maxSteps-- > 0) {
                 // 找 cur 的邻居中颜色为 curColor 的边
                 int next = -1;
                 int nextColor = -1;
@@ -110,7 +111,7 @@ vector<int> misraGries(int n, const vector<pair<int,int>>& edges) {
     return edgeColor;
 }
 
-bool isValidEdgeColoring(int n, const vector<pair<int,int>>& edges, const vector<int>& colors) {
+bool isValidEdgeColoring(int, const vector<pair<int,int>>& edges, const vector<int>& colors) {
     for (int i = 0; i < (int)edges.size(); i++) {
         for (int j = i + 1; j < (int)edges.size(); j++) {
             if (edges[i].first == edges[j].first ||

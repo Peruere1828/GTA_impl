@@ -98,16 +98,16 @@ vector<vector<int>> buildEulerianGraph(int n, const vector<tuple<int,int,int>>& 
     }
 
     // 回溯找出匹配对
-    int mask = (1 << k) - 1;
+    int mask = (1LL << k) - 1;
     while (mask > 0) {
         int first = -1;
         for (int i = 0; i < k; i++)
-            if (mask & (1 << i)) { first = i; break; }
+            if (mask & (1LL << i)) { first = i; break; }
         // 找和 first 匹配的 j
         int bestJ = -1, bestVal = INF;
         for (int j = first + 1; j < k; j++) {
-            if (mask & (1 << j)) {
-                int prevMask = mask ^ (1 << first) ^ (1 << j);
+            if (mask & (1LL << j)) {
+                int prevMask = mask ^ (1LL << first) ^ (1LL << j);
                 int val = dp[prevMask] + dist[odds[first]][odds[j]];
                 if (val < bestVal) {
                     bestVal = val;
@@ -119,7 +119,7 @@ vector<vector<int>> buildEulerianGraph(int n, const vector<tuple<int,int,int>>& 
         // 简化: 直接加一条边 (实际应沿最短路径加), 但这里只计算总权重
         int u = odds[first], v = odds[bestJ];
         mat[u][v]++; mat[v][u]++;
-        mask ^= (1 << first) ^ (1 << bestJ);
+        mask ^= (1LL << first) ^ (1LL << bestJ);
     }
     return mat;
 }
@@ -184,7 +184,7 @@ int main() {
     // 测试3: 路径 0-1-2 (奇度顶点: 0和2)
     {
         int w = chinesePostman(3, {{0,1,5},{1,2,3}});
-        cout << "测试3 路径: 最优邮路=" << w << " (期望=8+??)" << endl;
+        cout << "测试3 路径: 最优邮路=" << w << " (期望=8+8=16)" << endl;
         // 奇度: 0,2. 需要从0到2重复走, 最短路径 0-1-2 = 5+3=8
         // 总权 = 5+3 + 8 = 16
         assert(w == 16);

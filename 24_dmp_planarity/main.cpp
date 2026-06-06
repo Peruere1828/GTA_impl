@@ -43,13 +43,12 @@ bool dmpPlanarity(int n, const vector<pair<int,int>>& edges) {
     // Euler 公式基本界
     if (n >= 3 && m > 3 * n - 6) return false;
 
-    // 更紧的界基于 girth
+    // 更紧的界基于 girth: m <= g/(g-2) * (n-2) for g >= 3
     if (n >= 4) {
         int g = girth(n, edges);
-        if (g >= 4 && m > 2 * n - 4) return false;  // 无三角形
-        if (g >= 5 && n >= 4 && m > (5 * (n - 2)) / 3) return false; // 无C3/C4
-        if (g >= 6 && n >= 5 && m > 2 * n - 4) return false; // 实际上对g>=6也是这个? 让我算
-        // 对 girth g 的通式: m <= g/(g-2) * (n-2) for g >= 3
+        if (g >= 4 && m > 2 * n - 4) return false;  // 无三角形 (g>=4)
+        if (g >= 5 && n >= 4 && m > (5LL * (n - 2)) / 3) return false; // 无C3/C4 (g>=5)
+        if (g >= 6 && n >= 5 && m > (6LL * (n - 2)) / 4) return false; // g>=6: m <= 1.5*(n-2)
     }
 
     // 构建邻接表
@@ -95,9 +94,11 @@ bool dmpPlanarity(int n, const vector<pair<int,int>>& edges) {
         if (ei != -1) embeddedEdges.insert(ei);
     }
 
-    set<set<int>> faces;
-    set<int> face(cycle.begin(), cycle.end());
-    faces = {face, face};
+    // 使用 vector 存储两个面（内外），避免 set 去重
+    vector<set<int>> faces;
+    set<int> innerFace(cycle.begin(), cycle.end());
+    set<int> outerFace(cycle.begin(), cycle.end());
+    faces = {innerFace, outerFace};
 
     bool progress = true;
     int maxIter = m * 3;
@@ -132,9 +133,10 @@ bool dmpPlanarity(int n, const vector<pair<int,int>>& edges) {
             auto chosen=*validFaces.begin();
             for(int e:segEdges)embeddedEdges.insert(e);
             for(int v:segVerts)embeddedVerts.insert(v);
-            faces.erase(chosen);
+            auto it = find(faces.begin(), faces.end(), chosen);
+            if (it != faces.end()) faces.erase(it);
             set<int> nf=chosen; for(int v:segVerts)nf.insert(v);
-            faces.insert(nf);
+            faces.push_back(nf);
             progress=true; break;
         }
     }
