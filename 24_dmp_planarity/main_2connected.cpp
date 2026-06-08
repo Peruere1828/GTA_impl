@@ -149,11 +149,18 @@ bool dmpPlanarity2Connected(int n, const vector<pair<int,int>>& edges) {
                 expanded = false;
                 for (int ej : unembedded) {
                     if (visitedEdge[ej]) continue;
-                    if (seg.verts.count(edges[ej].first) ||
-                        seg.verts.count(edges[ej].second)) {
+                    int u = edges[ej].first, v = edges[ej].second;
+                    // Bug 1 修复: 只能通过"未嵌入"的顶点传导合并
+                    // 否则不同段共享同一个已嵌入接触点会被错误合并
+                    bool shared_unembedded = false;
+                    if (seg.verts.count(u) && !embeddedVerts.count(u))
+                        shared_unembedded = true;
+                    if (seg.verts.count(v) && !embeddedVerts.count(v))
+                        shared_unembedded = true;
+                    if (shared_unembedded) {
                         seg.edges.insert(ej);
-                        seg.verts.insert(edges[ej].first);
-                        seg.verts.insert(edges[ej].second);
+                        seg.verts.insert(u);
+                        seg.verts.insert(v);
                         visitedEdge[ej] = true;
                         expanded = true;
                     }
@@ -252,13 +259,19 @@ bool dmpPlanarity2Connected(int n, const vector<pair<int,int>>& edges) {
         // 在面边界上找 a 和 b 的位置
         int posA = find(face.begin(), face.end(), a) - face.begin();
         int posB = find(face.begin(), face.end(), b) - face.begin();
-        if (posA > posB) swap(posA, posB);
+        // Bug 2 修复: 交换 posA/posB 时必须同步交换 a/b 并反转 segPath
+        if (posA > posB) {
+            swap(posA, posB);
+            swap(a, b);
+            reverse(segPath.begin(), segPath.end());
+        }
 
         // 新面1: a → b 弧 + 段路径反向
         vector<int> face1;
         for (int i = posA; i <= posB; i++)
             face1.push_back(face[i]);
-        for (int i = (int)segPath.size() - 2; i >= 0; i--)
+        // Bug 3 修复: 跳过 segPath[0] (即 a)，避免重复
+        for (int i = (int)segPath.size() - 2; i >= 1; i--)
             face1.push_back(segPath[i]);
         faces.push_back(face1);
 
@@ -268,7 +281,8 @@ bool dmpPlanarity2Connected(int n, const vector<pair<int,int>>& edges) {
             face2.push_back(face[i]);
         for (int i = 0; i <= posA; i++)
             face2.push_back(face[i]);
-        for (int i = 1; i < (int)segPath.size(); i++)
+        // Bug 3 修复: 跳过 segPath 首尾 (即 a 和 b)，避免重复
+        for (int i = 1; i < (int)segPath.size() - 1; i++)
             face2.push_back(segPath[i]);
         faces.push_back(face2);
     }
