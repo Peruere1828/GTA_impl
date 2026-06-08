@@ -62,87 +62,11 @@ int minWeightMatching(const vector<int>& odds, const vector<vector<int>>& dist) 
     return dp[(1 << k) - 1];
 }
 
-// 构建欧拉图的多重边
-vector<vector<int>> buildEulerianGraph(int n, const vector<tuple<int,int,int>>& edges,
-                                         const vector<int>& odds,
-                                         const vector<vector<int>>& dist) {
-    vector<vector<int>> mat(n, vector<int>(n, 0));
-    vector<int> deg(n, 0);
-    for (auto& [u, v, w] : edges) {
-        mat[u][v]++; mat[v][u]++;
-        deg[u]++; deg[v]++;
-    }
-
-    // DP 求匹配, 并添加重复边
-    int k = odds.size();
-    if (k == 0) return mat;
-
-    vector<int> dp(1 << k, INF);
-    vector<int> match(1 << k, -1); // 记录和 first 匹配的 j
-    dp[0] = 0;
-    for (int mask = 0; mask < (1 << k); mask++) {
-        if (dp[mask] == INF) continue;
-        int first = -1;
-        for (int i = 0; i < k; i++)
-            if (!(mask & (1 << i))) { first = i; break; }
-        if (first == -1) continue;
-        for (int j = first + 1; j < k; j++) {
-            if (!(mask & (1 << j))) {
-                int newMask = mask | (1 << first) | (1 << j);
-                int val = dp[mask] + dist[odds[first]][odds[j]];
-                if (val < dp[newMask]) {
-                    dp[newMask] = val;
-                }
-            }
-        }
-    }
-
-    // 回溯找出匹配对
-    int mask = (1LL << k) - 1;
-    while (mask > 0) {
-        int first = -1;
-        for (int i = 0; i < k; i++)
-            if (mask & (1LL << i)) { first = i; break; }
-        // 找和 first 匹配的 j
-        int bestJ = -1, bestVal = INF;
-        for (int j = first + 1; j < k; j++) {
-            if (mask & (1LL << j)) {
-                int prevMask = mask ^ (1LL << first) ^ (1LL << j);
-                int val = dp[prevMask] + dist[odds[first]][odds[j]];
-                if (val < bestVal) {
-                    bestVal = val;
-                    bestJ = j;
-                }
-            }
-        }
-        // 在 odds[first] 和 odds[bestJ] 之间沿最短路径添加重复边
-        // 简化: 直接加一条边 (实际应沿最短路径加), 但这里只计算总权重
-        int u = odds[first], v = odds[bestJ];
-        mat[u][v]++; mat[v][u]++;
-        mask ^= (1LL << first) ^ (1LL << bestJ);
-    }
-    return mat;
-}
-
-// Hierholzer 求欧拉回路
-vector<int> eulerCircuit(int n, vector<vector<int>>& mat) {
-    vector<int> circuit;
-    vector<int> stk = {0};
-    while (!stk.empty()) {
-        int u = stk.back();
-        bool found = false;
-        for (int v = 0; v < n; v++) {
-            if (mat[u][v] > 0) {
-                mat[u][v]--; mat[v][u]--;
-                stk.push_back(v);
-                found = true; break;
-            }
-        }
-        if (!found) { circuit.push_back(u); stk.pop_back(); }
-    }
-    reverse(circuit.begin(), circuit.end());
-    return circuit;
-}
+// 注: 若要输出实际邮路，需要:
+//   1. 用 DP 回溯找出匹配对
+//   2. 沿 Floyd 最短路径添加重复边到邻接矩阵
+//   3. 在新图上运行 Hierholzer 求欧拉回路
+// 当前实现只计算最小总权值。
 
 int chinesePostman(int n, const vector<tuple<int,int,int>>& edges) {
     // 找奇度顶点
