@@ -175,17 +175,23 @@ bool dmpPlanarity(int n, const vector<pair<int,int>>& edges) {
             seg.verts.insert(edges[ei].second);
             visitedEdge[ei] = true;
 
-            // 扩张: 反复加入共享顶点的未嵌入边
+            // 扩张: 仅通过未嵌入的顶点传导合并段
+            // (若通过已嵌入顶点合并，会把本应分离的段错误合并)
             bool expanded = true;
             while (expanded) {
                 expanded = false;
                 for (int ej : unembedded) {
                     if (visitedEdge[ej]) continue;
-                    if (seg.verts.count(edges[ej].first) ||
-                        seg.verts.count(edges[ej].second)) {
+                    int a = edges[ej].first, b = edges[ej].second;
+                    bool shared_unembedded = false;
+                    if (seg.verts.count(a) && !embeddedVerts.count(a))
+                        shared_unembedded = true;
+                    if (seg.verts.count(b) && !embeddedVerts.count(b))
+                        shared_unembedded = true;
+                    if (shared_unembedded) {
                         seg.edges.insert(ej);
-                        seg.verts.insert(edges[ej].first);
-                        seg.verts.insert(edges[ej].second);
+                        seg.verts.insert(a);
+                        seg.verts.insert(b);
                         visitedEdge[ej] = true;
                         expanded = true;
                     }

@@ -78,25 +78,49 @@ vector<pair<int,int>> primMST(int n, const vector<vector<int>>& dist) {
     return edges;
 }
 
-// 对奇度顶点做最小权完美匹配 (贪心近似, 因为精确匹配太复杂)
+// 对奇度顶点做最小权完美匹配 (DP 精确解)
+// k 个奇度顶点 → O(k^2 · 2^k), k 通常很小 (≤ n)
 vector<pair<int,int>> minWeightMatching(const vector<int>& odds, const vector<vector<int>>& dist) {
-    int m = odds.size();
-    vector<pair<int,int>> matching;
-    vector<bool> used(m, false);
-    // 贪心: 每次选最近的一对
-    for (int i = 0; i < m; i++) {
-        if (used[i]) continue;
-        int best = -1, bestDist = INF;
-        for (int j = i + 1; j < m; j++) {
-            if (!used[j] && dist[odds[i]][odds[j]] < bestDist) {
-                bestDist = dist[odds[i]][odds[j]];
-                best = j;
+    int k = odds.size();
+    if (k == 0) return {};
+
+    // dp[mask] = 未匹配顶点子集 mask 的最小权值
+    // pairWith[mask] = 与当前 mask 下第一个未匹配位配对的位 (用于回溯)
+    vector<int> dp(1 << k, INF);
+    vector<int> pairWith(1 << k, -1);
+    dp[0] = 0;
+
+    for (int mask = 0; mask < (1 << k); mask++) {
+        if (dp[mask] == INF) continue;
+        int first = -1;
+        for (int i = 0; i < k; i++)
+            if (!(mask & (1 << i))) { first = i; break; }
+        if (first == -1) continue;
+        for (int j = first + 1; j < k; j++) {
+            if (!(mask & (1 << j))) {
+                int nm = mask | (1 << first) | (1 << j);
+                int val = dp[mask] + dist[odds[first]][odds[j]];
+                if (val < dp[nm]) {
+                    dp[nm] = val;
+                    pairWith[nm] = j; // 记录: nm 状态下 first 与 j 配对
+                }
             }
         }
-        if (best != -1) {
-            matching.push_back({odds[i], odds[best]});
-            used[i] = used[best] = true;
-        }
+    }
+
+    // 回溯构建匹配对
+    vector<pair<int,int>> matching;
+    int mask = (1 << k) - 1;
+    while (mask) {
+        // 找第一个设置的位 (= 当前状态最后配对时的 first)
+        int first = -1;
+        for (int i = 0; i < k; i++)
+            if (mask & (1 << i)) { first = i; break; }
+        if (first == -1) break;
+        int second = pairWith[mask];
+        if (second == -1) break; // 安全防护: 不应发生
+        matching.push_back({odds[first], odds[second]});
+        mask ^= (1 << first) | (1 << second);
     }
     return matching;
 }

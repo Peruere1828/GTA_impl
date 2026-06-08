@@ -79,7 +79,7 @@ vector<int> misraGries(int n, const vector<pair<int,int>>& edges) {
             // 构建从 v 出发的 a-b 交替路径, 翻转颜色
             int cur = v;
             int curColor = a; // 从 v 开始, 要翻转成 a
-            int maxSteps = n; // 防止无限循环
+            int maxSteps = 2 * n; // 安全边界: 交替路径长度 ≤ n, 2n 留有裕度
             while (maxSteps-- > 0) {
                 // 找 cur 的邻居中颜色为 curColor 的边
                 int next = -1;

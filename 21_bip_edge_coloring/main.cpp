@@ -17,6 +17,7 @@
 #include <cassert>
 #include <algorithm>
 #include <functional>
+#include <map>
 using namespace std;
 
 vector<int> bipartiteEdgeColoringDelta(int nL, int nR, const vector<pair<int,int>>& edges) {
@@ -31,6 +32,10 @@ vector<int> bipartiteEdgeColoringDelta(int nL, int nR, const vector<pair<int,int
     for (int d : degR) delta = max(delta, d);
 
     vector<int> edgeColor(m, 0);
+    // O(1) 边索引查找: (u,v) → 边编号
+    map<pair<int,int>, int> edgeId;
+    for (int i = 0; i < m; i++)
+        edgeId[{edges[i].first, edges[i].second}] = i;
     // colorAtL[u][c] = 与 u 关联的颜色为 c 的边另一端点 (在 R 中), -1 表示空闲
     vector<vector<int>> colorAtL(nL, vector<int>(delta + 1, -1));
     vector<vector<int>> colorAtR(nR, vector<int>(delta + 1, -1));
@@ -58,29 +63,34 @@ vector<int> bipartiteEdgeColoringDelta(int nL, int nR, const vector<pair<int,int
         int b = 1;
         while (colorAtR[v][b] != -1) b++;
 
+        // 若 a==b, 直接染色 (颜色 a 在两端都空闲)
+        if (a == b) {
+            edgeColor[ei] = a;
+            colorAtL[u][a] = v;
+            colorAtR[v][a] = u;
+            continue;
+        }
+
         // 从 v 出发走 a-b 交替路径, 翻转颜色
-        // 路径: v --(b)--> w1 --(a)--> w2 --(b)--> ...
+        // 路径: v --(a)--> w1 --(b)--> w2 --(a)--> ...
         int curV = v;
         int curColor = a;
-        int maxSteps = nL + nR; // 防止无限循环
+        int maxSteps = 2 * (nL + nR); // 充足的安全边界
         while (maxSteps-- > 0) {
             int nextU = colorAtR[curV][curColor];
             if (nextU == -1) break;
-            int nextV = colorAtL[nextU][(curColor == a) ? b : a];
             int otherColor = (curColor == a) ? b : a;
+            int nextV = colorAtL[nextU][otherColor];
 
-            // 翻转: curV 和 nextU 之间的边从 curColor 改为 otherColor
+            // 翻转: curV↔nextU 的边从 curColor 改为 otherColor
             colorAtR[curV][curColor] = -1;
             colorAtL[nextU][curColor] = -1;
             colorAtR[curV][otherColor] = nextU;
             colorAtL[nextU][otherColor] = curV;
 
-            // 更新边颜色
-            for (int i = 0; i < m; i++) {
-                if (edges[i].first == nextU && edges[i].second == curV) {
-                    edgeColor[i] = otherColor; break;
-                }
-            }
+            // O(1) 边颜色更新
+            auto eit = edgeId.find({nextU, curV});
+            if (eit != edgeId.end()) edgeColor[eit->second] = otherColor;
 
             if (nextV == -1) break;
             curV = nextV;
